@@ -25,4 +25,4 @@ AS BEGIN
 	RETURN 1.0 * (@num1 * 1024)
 END
 
-SELECT dbo.Group3_TBtoGBConverter(2.11);
+--SELECT dbo.Group3_TBtoGBConverter(2.11);
