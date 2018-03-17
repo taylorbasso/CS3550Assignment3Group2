@@ -6,4 +6,19 @@
 
 Change the status of a computer (lost computers, in for repairs, etc.) */
 
+-- NOTE: I wonder if this procedure will need to update EmployeeComputers as well... 
+-- Leaving it for now, might have to change later.
+
 CREATE OR ALTER PROCEDURE Group3_UpdateComputerStatus
+	@ComputerKey int,
+	@ComputerStatus int
+AS BEGIN
+	UPDATE 
+		Computers 
+	SET 
+		ComputerStatusKey=@ComputerStatus 
+	WHERE
+		ComputerKey=@ComputerKey
+END
+
+--EXEC dbo.Group3_UpdateComputerStatus 1, 0;
