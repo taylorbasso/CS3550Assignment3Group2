@@ -8,16 +8,37 @@ Adding new employees.
 Return the key of the newly created employee, or an error message/code if something doesn't work.*/
 
 CREATE OR ALTER PROCEDURE Group3_InsertEmployee
-	@FirstName varchar(50),
-	@LastName varchar(50)
-AS 
+	@LastName varchar(25),
+	@FirstName varchar(25),
+	@Email varchar(50),
+	@Hired date,
+	@Terminated date,
+	@DepartmentKey int,
+	@SupervisorEmployeeKey int
+AS BEGIN
 	INSERT Employees 
 	(
-		FirstName, 
-		LastName
+		LastName, 
+		FirstName,
+		Email,
+		Hired,
+		Terminated,
+		DepartmentKey,
+		SupervisorEmployeeKey
 	) 
 	VALUES 
 	(
-		@FirstName, 
-		@FirstName
+		@LastName, 
+		@FirstName,
+		@Email,
+		@Hired,
+		@Terminated,
+		@DepartmentKey,
+		@SupervisorEmployeeKey
 	)
+	SELECT SCOPE_IDENTITY() [EmployeeKey]
+END
+
+--EXEC Group3_InsertEmployee 'Knight', 'Bob', 'Bob@knight.com', '2018-03-16', NULL, 1, 1
+--EXEC Group3_InsertEmployee NULL, 'Bob', 'Bob@knight.com', '2018-03-16', NULL, 1, 1
+
