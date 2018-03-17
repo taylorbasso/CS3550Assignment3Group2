@@ -39,6 +39,7 @@ AS BEGIN
 	SELECT SCOPE_IDENTITY() [EmployeeKey]
 END
 
---EXEC Group3_InsertEmployee 'Knight', 'Bob', 'Bob@knight.com', '2018-03-16', NULL, 1, 1
---EXEC Group3_InsertEmployee NULL, 'Bob', 'Bob@knight.com', '2018-03-16', NULL, 1, 1
-
+--EXEC dbo.Group3_InsertEmployee 'Knight', 'Bob', 'Bob@knight.com', '2018-03-16', NULL, 1, 1
+--EXEC dbo.Group3_InsertEmployee NULL, 'Bob', 'Bob@knight.com', '2018-03-16', NULL, 1, 1
+--SELECT * FROM Employees
+--DELETE FROM Employees WHERE LastName='Knight'
