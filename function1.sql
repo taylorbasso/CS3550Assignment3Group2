@@ -5,22 +5,25 @@ the conversion themselves). They'll also be passing back TB when they manipulate
 computer inventory and you'll need to convert to GB to store.*/
 CREATE OR ALTER FUNCTION Group3_GBtoTBConverter
 (
-	@num1 DECIMAL(18,10)
+	@num1 DECIMAL(8,3)
 )
-RETURNS DECIMAL(18,10)
+RETURNS DECIMAL(8,3)
+--Returns decimal for developer
 AS BEGIN
 	RETURN 1.0 * (@num1 / 1024)
 END
 
---SELECT dbo.Group3_GBtoTBConverter(131.12);
+--SELECT dbo.Group3_GBtoTBConverter(510);
 
 CREATE OR ALTER FUNCTION Group3_TBtoGBConverter
 (
-	@num1 DECIMAL(18,10)
+	@num1 DECIMAL(8,3)
 )
-RETURNS DECIMAL(18,10)
+RETURNS int
+--Returns int because database columns are int
 AS BEGIN
-	RETURN 1.0 * (@num1 * 1024)
+	--Round up to nearest GB
+	RETURN CEILING(1.0 * (@num1 * 1024))
 END
 
---SELECT dbo.Group3_TBtoGBConverter(2.11);
+--SELECT dbo.Group3_TBtoGBConverter(1.11);
