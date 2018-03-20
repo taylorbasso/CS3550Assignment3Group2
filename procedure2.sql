@@ -16,6 +16,19 @@ CREATE OR ALTER PROCEDURE Group3_InsertEmployee
 	@DepartmentKey int,
 	@SupervisorEmployeeKey int
 AS BEGIN
+	IF @SupervisorEmployeeKey IS NOT NULL
+	BEGIN
+		IF (SELECT
+				Terminated
+			FROM
+				Employees
+			WHERE
+				EmployeeKey=@SupervisorEmployeeKey) IS NOT NULL 
+				BEGIN
+					RAISERROR('Employee supervisor is not an active employee. Cannot insert.',18,1)
+					RETURN
+				END
+	END
 	INSERT Employees 
 	(
 		LastName, 
@@ -43,3 +56,5 @@ END
 --EXEC dbo.Group3_InsertEmployee NULL, 'Bob', 'Bob@knight.com', '2018-03-16', NULL, 1, 1
 --SELECT * FROM Employees
 --DELETE FROM Employees WHERE LastName='Knight'
+--UPDATE Employees SET Terminated='2018-03-01' WHERE EmployeeKey=3;
+--EXEC dbo.Group3_InsertEmployee 'Knight', 'Bob', 'Bob@knight.com', '2018-03-16', NULL, 1, 3
