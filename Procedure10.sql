@@ -10,3 +10,9 @@ AS
 		Returned = @returned
 	WHERE
 		ComputerKey = @computerKey
+
+	UPDATE dbo.Computers
+	SET
+		ComputerStatusKey = 2
+	WHERE
+		computerKey = @computerKey
