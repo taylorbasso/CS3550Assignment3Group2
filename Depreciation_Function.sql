@@ -10,10 +10,10 @@ BEGIN
 	DECLARE @Depreciation int = 48
 	IF @ComputerTypeKey = 1
 	BEGIN
-		@Depreciation = 36
+		SET @Depreciation = 36
 	END
 	
-	DECLARE @Months int = DATEPART(@PurchaseDate) - DATEPART(GETDATE())
+	DECLARE @Months int = DATEPART(MONTH, @PurchaseDate) - DATEPART(MONTH, GETDATE())
 	
-	RETURN (@Months / Depreciation) * @ComputerOriginalCost
+	RETURN (@Months / @Depreciation) * @ComputerOriginalCost
 END
