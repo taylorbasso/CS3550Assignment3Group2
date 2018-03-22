@@ -1,37 +1,32 @@
 CREATE TRIGGER Group2_ComputerStatusHistoryComputerAfterInsert
-ON Computers
+ON dbo.Computers
 AFTER INSERT
 AS
 BEGIN
 
 	INSERT Group2_ComputerStatusHistory (ComputerKey, NewComputerStatusKey)
-	VALUES
-	(
-		SELECT
-			I.ComputerKey,
-			I.ComputerStatusKey
-		FROM
-			inserted I
-	)
+	SELECT
+		I.ComputerKey,
+		I.ComputerStatusKey
+	FROM
+		inserted I
+	
 END
 
 CREATE TRIGGER Group2_ComputerStatusHistoryComputerAfterUpdate
-ON Computers
+ON dbo.Computers
 AFTER UPDATE
 AS
 BEGIN
 	
 	INSERT Group2_ComputerStatusHistory(ComputerKey, OldComputerStatusKey, NewComputerStatusKey)
-	VALUES
-	(
-		SELECT
-			I.ComputerKey,
-			D.ComputerStatusKey [OldComputerStatusKey],
-			I.ComputerStatusKey [NewComputerStatusKey]
-		FROM
-			deleted D
-			INNER JOIN inserted I ON D.ComputerKey = I.ComputerKey
-	)
+	SELECT
+		I.ComputerKey,
+		D.ComputerStatusKey [OldComputerStatusKey],
+		I.ComputerStatusKey [NewComputerStatusKey]
+	FROM
+		deleted D
+		INNER JOIN inserted I ON D.ComputerKey = I.ComputerKey
 END
 
 /* 

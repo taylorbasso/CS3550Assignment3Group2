@@ -13,7 +13,7 @@ BEGIN
 		SET @Depreciation = 36
 	END
 	
-	DECLARE @Months int = DATEPART(MONTH, @PurchaseDate) - DATEPART(MONTH, GETDATE())
+	DECLARE @Months decimal = DATEDIFF(MONTH, @PurchaseDate, GETDATE())
 	
 	RETURN (@Months / @Depreciation) * @ComputerOriginalCost
 END
