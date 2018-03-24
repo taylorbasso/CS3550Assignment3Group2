@@ -12,7 +12,6 @@ CREATE PROCEDURE Group3_AssignComputer
 	@ComputerKey int,
 	@ComputerStatusKey int,
 	@EmployeeKey int,
-	@EmployeeComputerKey int,
 	@Assigned date
 AS
 	BEGIN

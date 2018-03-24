@@ -17,6 +17,7 @@ AS BEGIN
 		Computers 
 	SET 
 		ComputerStatusKey=@ComputerStatus 
+		ComputerStatusDate=GETDATE()
 	WHERE
 		ComputerKey=@ComputerKey
 END

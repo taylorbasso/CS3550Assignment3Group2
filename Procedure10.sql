@@ -13,6 +13,7 @@ AS
 
 	UPDATE dbo.Computers
 	SET
-		ComputerStatusKey = 2
+		ComputerStatusKey = 2,
+		ComputerStatusDate = GETDATE()
 	WHERE
 		computerKey = @computerKey
