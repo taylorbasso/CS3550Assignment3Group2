@@ -16,7 +16,7 @@ AS BEGIN
 	UPDATE 
 		Computers 
 	SET 
-		ComputerStatusKey=@ComputerStatus 
+		ComputerStatusKey=@ComputerStatus,
 		ComputerStatusDate=GETDATE()
 	WHERE
 		ComputerKey=@ComputerKey
