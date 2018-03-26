@@ -26,12 +26,22 @@ AS
 			ComputerKey = @ComputerKey
 		)
 		BEGIN
-			UPDATE
-				EmployeeComputers
-			SET
-				ComputerKey=@ComputerKey,
-				ASSIGNED=@Assigned
-			WHERE
-				EmployeeKey=@EmployeeKey
+			IF EXISTS (
+				SELECT
+					EmployeeComputerKey
+				FROM 
+					EmployeeComputers
+				WHERE 
+					ComputerKey = @ComputerKey AND
+					Returned IS NULL
+			)
+			BEGIN
+				RAISERROR('Computer is already assigned', 1, 1);
+			END
+			ELSE
+			BEGIN
+				INSERT INTO EmployeeComputers (EmployeeKey, ComputerKey, Assigned)
+				VALUES (@EmployeeKey, @ComputerKey, @Assigned)
+			END
 		END
 	END
