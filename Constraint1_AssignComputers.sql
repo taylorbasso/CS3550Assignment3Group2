@@ -1,27 +1,35 @@
 /*No individual can have more than two working desktops or one working laptop assigned to them at any given time.*/
 
-CREATE TRIGGER Group3_employeeComputer
+CREATE OR ALTER TRIGGER Group3_employeeComputer
 ON dbo.EmployeeComputers
 INSTEAD OF INSERT
 AS
 	BEGIN
+		DECLARE @desktopcount INT, @laptopcount INT
 		SELECT
-			EmployeeKey,
-			COUNT(*) [Computers]
+			@desktopcount = COUNT(CASE c.ComputerTypeKey WHEN 1 THEN 1 ELSE NULL END),
+			@laptopcount = COUNT(CASE c.ComputerTypeKey WHEN 2 THEN 1 ELSE NULL END)
 		FROM
-			EmployeeComputers
-		GROUP BY
-			EmployeeKey
-		HAVING
-			COUNT(*) < 3
+			EmployeeComputers ec
+		LEFT JOIN Computers c ON
+			ec.ComputerKey = c.ComputerKey
+		WHERE
+			EmployeeKey = (SELECT EmployeeKey FROM inserted) AND
+			c.ComputerStatusKey < 3
 
-		IF (COUNT(*) > 2)
+		IF (@desktopcount >= 2 OR @laptopcount >= 1)
 			BEGIN
-				BREAK
+				RAISERROR('No individual can have more than two working desktops or one working laptop assigned to them at any given time.', 1, 1);
 			END
 
 		ELSE
 			BEGIN
-				--Insert call to Assign Computer Call
+				INSERT INTO EmployeeComputers (EmployeeKey, ComputerKey, Assigned, Returned)
+				SELECT
+					EmployeeKey,
+					ComputerKey,
+					Assigned,
+					Returned
+				FROM inserted
 			END
 	END
