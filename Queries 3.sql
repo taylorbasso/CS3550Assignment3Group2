@@ -12,7 +12,7 @@ EXEC Group3_AssignComputer @newCompKey, 0, 3, '3/24/2018';
 Terminate employee #3 (Major Geek) 
 */
 
---Waiting for procedure 6
+EXEC TerminateEmployee 3, '3/26/2018'
 
 /* 
 A query using your inline table function to display available apple computers

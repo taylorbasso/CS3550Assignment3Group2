@@ -1,6 +1,9 @@
 DROP TABLE EmployeeComputers
 ;
 
+DROP TABLE Group2_ComputerStatusHistory
+;
+
 DROP TABLE Computers
 ;
 
