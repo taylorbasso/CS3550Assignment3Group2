@@ -8,7 +8,7 @@ Assign/reassign a computer. Shouldn't allow computers that are in for repair, lo
 to be assigned out.
 */
 
-CREATE PROCEDURE Group3_AssignComputer
+CREATE OR ALTER PROCEDURE Group3_AssignComputer
 	@ComputerKey int,
 	@ComputerStatusKey int,
 	@EmployeeKey int,
