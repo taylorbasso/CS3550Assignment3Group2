@@ -1143,11 +1143,32 @@ ALTER TABLE Group2_Computers
 ADD CONSTRAINT Group2_Hdd5120GBLimit 
 	CHECK (HardDriveCapacityinGB <= 5120)
 
+GO
 	/*
  - Do not let anyone delete a computer record.  Can't happen!  We have to prove that no equipment is being purchased
 	and removed from our systems to sell privately.  Instead of a delete, the computer should be retired, or
 	made available (depending on its depreciation status).
 	*/
+
+CREATE TRIGGER Group2_DontSell
+ON Group2_Computers
+INSTEAD OF DELETE
+AS
+	BEGIN
+		DECLARE @CompStatusKey int
+		SELECT
+			@CompStatusKey = ComputerStatusKey
+		FROM
+			Group2_Computers
+		IF @CompStatusKey < 5
+			BEGIN
+				UPDATE Group2_ComputerStatuses SET ComputerStatus = 2
+			END
+		ELSE
+			BEGIN
+				UPDATE Group2_ComputerStatuses SET ComputerStatus = 5
+			END
+	END
 
 	/*
 Last, add features, safegaurds, etc. that help ensure the original goal - good data quality and graceful error handling.
