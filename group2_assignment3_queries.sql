@@ -419,7 +419,7 @@ GO
 --GO
 
 
-CREATE FUNCTION Group2_ComputersOfBrand
+CREATE OR ALTER FUNCTION Group2_ComputersOfBrand
 (
 	@BrandKey INT
 )
@@ -590,7 +590,9 @@ Create stored procedures that complete the below tasks.  You can combine as you 
 	@Terminated date,
 	@DepartmentKey int,
 	@SupervisorEmployeeKey int
-AS BEGIN
+AS 
+BEGIN
+	BEGIN TRY
 	INSERT Group2_Employees 
 	(
 		LastName, 
@@ -611,7 +613,13 @@ AS BEGIN
 		@DepartmentKey,
 		@SupervisorEmployeeKey
 	)
-	SELECT SCOPE_IDENTITY() [EmployeeKey]
+	END TRY
+	BEGIN CATCH
+		PRINT 'Unable to insert data! An Error occurred!'
+		RETURN
+	END CATCH
+
+	RETURN SELECT SCOPE_IDENTITY() [EmployeeKey]
 END
 
 GO
@@ -630,7 +638,8 @@ GO
 	@DepartmentKey int,
 	@SuperVisorEmployeeKey int
 AS
-	BEGIN
+BEGIN
+	BEGIN TRY
 		UPDATE Group2_Employees
 		SET
 		  LastName=@LastName,
@@ -642,8 +651,12 @@ AS
 		  SuperVisorEmployeeKey=@SuperVisorEmployeeKey
 		WHERE
 			EmployeeKey=@EmployeeKey
-	END
-
+	END TRY
+	BEGIN CATCH
+		PRINT CONCAT('Unable to update Employee ', @EmployeeKey, ': An Error occurred!')
+		RETURN
+	END CATCH
+END
 GO
 
  /*
@@ -655,14 +668,41 @@ CREATE OR ALTER PROCEDURE Group2_CreateDepartment
 	@DepartmentKey_var int OUTPUT,
 	@Department_var varchar(255)
 AS
-	BEGIN
-		INSERT Group2_Departments(
-			Department
-			)
-		VALUES (
-			@Department_var
-			)
-	END
+BEGIN
+	BEGIN TRY
+		DECLARE @ExistingDepartment int
+
+		IF EXISTS
+		(
+			SELECT
+				D.DepartmentKey
+			FROM
+				Group2_Departments D
+			WHERE 
+				D.Department = @Department_var
+		)
+		BEGIN
+			PRINT CONCAT('Invalid Department Name [', @Department_var, ']: Department exists!')
+			RETURN
+		END
+		ELSE
+		BEGIN
+			INSERT Group2_Departments(
+				Department
+				)
+			VALUES (
+				@Department_var
+				)
+
+			SET @DepartmentKey_var = SCOPE_IDENTITY()
+			RETURN
+		END
+	END TRY
+	BEGIN CATCH
+		PRINT CONCAT('Unable to create Department! Is the department name unique? [', @Department_var, ']')
+	END CATCH
+END
+
 GO
 
 /*
@@ -757,18 +797,27 @@ GO
 	@returned date
 
 AS
-	UPDATE Group2_EmployeeComputers
-	SET
-		Returned = @returned
-	WHERE
-		ComputerKey = @computerKey
+BEGIN
+	BEGIN TRY
+		UPDATE Group2_EmployeeComputers
+		SET
+			Returned = @returned
+		WHERE
+			ComputerKey = @computerKey
 
-	UPDATE Group2_Computers
-	SET
-		ComputerStatusKey = 2--,
-		--ComputerStatusDate = GETDATE()
-	WHERE
-		computerKey = @computerKey
+		UPDATE Group2_Computers
+		SET
+			ComputerStatusKey = 2--,
+			--ComputerStatusDate = GETDATE()
+		WHERE
+			computerKey = @computerKey
+	END TRY
+	BEGIN CATCH
+		PRINT 'Unable to Return Computer! An error occurred'
+		RETURN
+	END CATCH
+
+END
 
 GO
  /*
@@ -809,39 +858,49 @@ BEGIN
 		WHERE 
 			SupervisorEmployeeKey = @EmployeeKey;
 	END
-
-	SELECT 
-		EmployeeComputerKey,
-		ComputerKey
-	INTO 
-		#computersToReturn
-	FROM 
-		Group2_EmployeeComputers
-	WHERE 
-		EmployeeKey = @EmployeeKey
-
-	WHILE EXISTS (
-		SELECT 
-			EmployeeComputerKey
-		FROM 
-			#computersToReturn
-	)
+	ELSE
 	BEGIN
-		DECLARE @computerToReturn INT;
-		DECLARE @returnedCompKey INT;
-
-		SELECT TOP 1
-			@returnedCompKey = EmployeeComputerKey,
-			@computerToReturn = ComputerKey
-		FROM 
-			#computersToReturn
-
-		EXEC Group2_ReturnComputer @computerToReturn, @TerminationDate
-
-		DELETE FROM #computersToReturn
-		WHERE EmployeeComputerKey = @returnedCompKey
+		PRINT 'Error Terminating employee! Supervisor Does not exist!'
+		RETURN
 	END
 
+	BEGIN TRY
+		SELECT 
+			EmployeeComputerKey,
+			ComputerKey
+		INTO 
+			#computersToReturn
+		FROM 
+			Group2_EmployeeComputers
+		WHERE 
+			EmployeeKey = @EmployeeKey
+
+		WHILE EXISTS (
+			SELECT 
+				EmployeeComputerKey
+			FROM 
+				#computersToReturn
+		)
+		BEGIN
+			DECLARE @computerToReturn INT;
+			DECLARE @returnedCompKey INT;
+
+			SELECT TOP 1
+				@returnedCompKey = EmployeeComputerKey,
+				@computerToReturn = ComputerKey
+			FROM 
+				#computersToReturn
+
+			EXEC Group2_ReturnComputer @computerToReturn, @TerminationDate
+
+			DELETE FROM #computersToReturn
+			WHERE EmployeeComputerKey = @returnedCompKey
+		END
+	END TRY
+	BEGIN CATCH
+		PRINT 'Error Terminating Employee! Unable to return all computers!'
+		RETURN
+	END CATCH
 END
 
 GO
@@ -865,36 +924,40 @@ GO
 
 AS
 BEGIN
-	INSERT Group2_Computers(
-		ComputerTypeKey, 
-		BrandKey, 
-		ComputerStatusKey, 
-		--ComputerStatusDate,
-		PurchaseDate, 
-		PurchaseCost, 
-		MemoryCapacityInGB, 
-		HardDriveCapacityInGB, 
-		VideoCardDescription, 
-		CPUTypeKey, 
-		CPUClockRateInGHZ) 
-	VALUES(
-		@computerTypeKey, 
-		@brandKey, 
-		@ComputerStatusKey, 
-		--@ComputerStatusDate,
-		@PurchaseDate, 
-		@PurchaseCost, 
-		@MomoryCapacityInGB, 
-		@HardDriveCapacityInGB, 
-		@VideoCardDescription, 
-		@CPUTypeKey, 
-		@CPUClockRateInGHZ)
-	;
+	BEGIN TRY
+		INSERT Group2_Computers(
+			ComputerTypeKey, 
+			BrandKey, 
+			ComputerStatusKey, 
+			--ComputerStatusDate,
+			PurchaseDate, 
+			PurchaseCost, 
+			MemoryCapacityInGB, 
+			HardDriveCapacityInGB, 
+			VideoCardDescription, 
+			CPUTypeKey, 
+			CPUClockRateInGHZ) 
+		VALUES(
+			@computerTypeKey, 
+			@brandKey, 
+			@ComputerStatusKey, 
+			--@ComputerStatusDate,
+			@PurchaseDate, 
+			@PurchaseCost, 
+			@MomoryCapacityInGB, 
+			@HardDriveCapacityInGB, 
+			@VideoCardDescription, 
+			@CPUTypeKey, 
+			@CPUClockRateInGHZ)
+	END TRY
+	BEGIN CATCH
+		PRINT 'Error inserting computer! An Error ocurred!'
+		RETURN
+	END CATCH
 
 	SELECT 
 		@computerKey = MAX(ComputerKey)
 	FROM Group2_Computers
-	;
 
 	RETURN
 END
@@ -1101,6 +1164,8 @@ EXEC Group2_CreateDepartment
 	@Department_var = 'Business Intelligence', 
 	@DepartmentKey_var = @CaptureOutput
 
+GO
+
  /*
  - Add two valid employee, both part of Business Intelligence
  */
@@ -1122,6 +1187,8 @@ EXEC Group2_InsertEmployee
 	@DepartmentKey = 5, 
 	@SupervisorEmployeeKey = 1
 
+GO
+
  /*
  - Try to add an employee, passing in a department that doesn't exist
  */
@@ -1135,6 +1202,7 @@ EXEC Group2_InsertEmployee
 	@DepartmentKey = 6, 
 	@SupervisorEmployeeKey = 1
 	--Should fail because the department has not yet been created.
+GO
 
  /*
  - Try to add an employee, passing in a supervisor that is no longer active (what should this do?)
@@ -1150,14 +1218,82 @@ EXEC Group2_InsertEmployee
 	@SupervisorEmployeeKey = 2
 	--Should fail because the supervisor is no longer active.
 
+GO
+
  --- Update an employees department to 'Human Resources'
+DECLARE @dptKey int
+SET @dptKey = 
+(
+	SELECT 
+		DepartmentKey 
+	FROM 
+		Group2_Departments 
+	WHERE 
+		Department='Accounting'
+)
+
+EXEC Group2_UpdateEmployee 
+	3, 
+	'Geek', 
+	'Major', 
+	'MGeek@thiscompany.com', 
+	'2017-01-01', 
+	NULL, 
+	@dptKey, 
+	1
+
+GO
 
  --- Try to update an employees department to 'Moon Staff' (assuming that 'Moon Staff' doesn't exist
 	--in your database).  
+DECLARE @dptKey int
+SET @dptKey = 
+(
+	SELECT
+		DepartmentKey 
+	FROM 
+		Group2_Departments 
+	WHERE 
+		Department='Moon Staff'
+)
+
+EXEC Group2_UpdateEmployee 
+	3, 
+	'Geek', 
+	'Major', 
+	'MGeek@thiscompany.com', 
+	'2017-01-01', 
+	NULL, 
+	@dptKey, 
+	1
+GO
 
  --- Update an employees supervisor to an active employee
 
  --- Try updating an employees supervisor to an inactive employee.  Should this work?
+ UPDATE 
+	Group2_Employees 
+ SET 
+	Terminated='2018-03-30' 
+WHERE EmployeeKey=2
+
+DECLARE @Error nvarchar(255)
+EXEC Group2_UpdateSupervisor 
+	2, 
+	3, 
+	@Error OUTPUT
+
+SELECT @Error
+
+--Set it back to normal
+UPDATE 
+	Group2_Employees 
+SET 
+	Terminated=NULL 
+WHERE 
+	EmployeeKey=2
+
+GO
 
  --- Create a new Mac Book pro laptop for Major Geek.  Use whatever specs you can find off the Apple
 	--web page.  Make sure the laptop gets assigned to Major Geek
@@ -1182,24 +1318,30 @@ EXEC Group2_AssignComputer
 	0, 
 	3, 
 	'3/24/2018';
+GO
 
  --- Terminate employee #3 (Major Geek)
 EXEC Group2_TerminateEmployee 
 	3, 
 	'3/26/2018'
+GO
 
  --- A query using your inline table function to display available apple computers
 SELECT
 	*
 FROM
 	Group2_ComputersOfBrand(1)
+GO
 
  --- A query (using inline view or stored procedure) that shows the history of a specific computer
 	--in your database.
 EXEC Group2_ComputerHistory 1
 
+GO
  --- Deal with the CEO losing his laptop.
 EXEC Group2_UpdateComputerStatus 2, 3
+
+GO
 
  --- Add two computers of your own chosing
 DECLARE @firstCompKey int;
@@ -1254,6 +1396,8 @@ EXEC Group2_AssignComputer
 	1, 
 	'3/24/2018';
 
+GO
+
  --- Try to retire the second machine you assigned to the CEO (he's picky...)
 EXEC Group2_RetireComputer 6
 
@@ -1262,6 +1406,7 @@ SELECT
 	*
 FROM Group2_LostStolenComputers
 
+GO
 
  /*
  - And any other queries/code execution to show your awesomeness
